@@ -14,11 +14,16 @@ public class GameManager : MonoBehaviour
     // Kartların yerleşeceği panel
     public Transform gridPanel;
 
+    // Kart görselleri
+    public List<Sprite> cardFrontSprites; // Ön yüz görselleri
+
     // Kart sayısı (oyun zorluğuna göre ayarlanabilir)
     private int numberOfCards;
 
     // Seçilen kartları tutan liste
     private List<Card> selectedCards = new List<Card>();
+
+    private List<int> shuffledValues = new List<int>(); // Karıştırılmış eşleşme değerleri
 
     void Start()
     {
@@ -35,11 +40,24 @@ public class GameManager : MonoBehaviour
             Destroy(child.gameObject);
         }
 
+        shuffledValues.Clear();
+        // Kart eşleşme değerlerini oluştur ve karıştır
+        for (int i = 0; i < cardCount / 2; i++)
+        {
+            shuffledValues.Add(i);
+            shuffledValues.Add(i); // Her değerden iki tane ekle (eşleşme için)
+        }
+        Shuffle(shuffledValues);
+
         // Yeni kartları oluştur
         for (int i = 0; i < cardCount; i++)
         {
             GameObject newCard = Instantiate(cardPrefab, gridPanel);
-            newCard.GetComponent<Card>().SetValue(i / 2); // Eşleşme için çift değerler
+            Card card = newCard.GetComponent<Card>();
+
+            // Kart değerini ve ön yüz görselini ata
+            int cardValue = shuffledValues[i];
+            card.SetValue(cardValue, cardFrontSprites[cardValue]);
         }
     }
 
@@ -51,19 +69,16 @@ public class GameManager : MonoBehaviour
 
         if (selectedCards.Count == 2)
         {
-            CheckMatch(selectedCards[0], selectedCards[1]);
-            selectedCards.Clear(); // Karşılaştırma sonrası listeyi temizle
-
-            // Eğer eşleşmeler tamamlandıysa, yeni seviyeye geç
-            if (IsLevelComplete())
-            {
-                OnLevelComplete();
-            }
+            // İki kart seçildiğinde eşleşmeyi kontrol et
+            StartCoroutine(CheckMatch(selectedCards[0], selectedCards[1]));
         }
     }
 
-    public void CheckMatch(Card card1, Card card2)
+    private IEnumerator CheckMatch(Card card1, Card card2)
     {
+        // İki kart seçildikten sonra 1 saniye bekle
+        yield return new WaitForSeconds(1f);
+
         if (card1.cardValue == card2.cardValue)
         {
             // Puan ekle
@@ -73,11 +88,21 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("No Match.");
-            // Yanlış eşleşme durumunda kartları yeniden çevrilebilir yapın
+            // Yanlış eşleşme durumunda kartları yeniden çevrilir hale getir
             card1.ResetCard();
             card2.ResetCard();
         }
+
+        // Seçilen kartları temizle
+        selectedCards.Clear();
+
+        // Eğer eşleşmeler tamamlandıysa yeni seviyeye geç
+        if (IsLevelComplete())
+        {
+            OnLevelComplete();
+        }
     }
+
 
     public void OnLevelComplete()
     {
@@ -101,5 +126,17 @@ public class GameManager : MonoBehaviour
             }
         }
         return true;
+    }
+
+    // Listeyi karıştırmak için basit bir fonksiyon
+    void Shuffle(List<int> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int randomIndex = Random.Range(0, i + 1);
+            int temp = list[i];
+            list[i] = list[randomIndex];
+            list[randomIndex] = temp;
+        }
     }
 }
