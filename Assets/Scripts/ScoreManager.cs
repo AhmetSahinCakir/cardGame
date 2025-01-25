@@ -13,10 +13,23 @@ public class ScoreManager : MonoBehaviour
 
         if (currentScore > highScore)
         {
-            highScore = currentScore;
+            highScore = currentScore; // Eğer yeni puan, yüksek skordan büyükse highScore güncellenir
         }
 
         Debug.Log($"Current Score: {currentScore}, High Score: {highScore}");
+    }
+
+    public void SubtractScore(int points)
+    {
+        currentScore -= points;
+
+        // Puan 0'ın altına düşemez
+        if (currentScore < 0)
+        {
+            currentScore = 0;
+        }
+
+        Debug.Log($"Points deducted. Current Score: {currentScore}");
     }
 
     public void ResetScore()

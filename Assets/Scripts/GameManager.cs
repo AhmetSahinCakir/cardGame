@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     public GameSettings gameSettings; 
     public ScoreManager scoreManager;
-    public LevelManager levelManager; // LevelManager referansı
+    public LevelManager levelManager;
 
     // Kart prefab'i
     public GameObject cardPrefab;
@@ -15,19 +16,31 @@ public class GameManager : MonoBehaviour
     public Transform gridPanel;
 
     // Kart görselleri
-    public List<Sprite> cardFrontSprites; // Ön yüz görselleri
+    public List<Sprite> cardFrontSprites;
 
-    // Kart sayısı (oyun zorluğuna göre ayarlanabilir)
+    // Kart sayısı
     private int numberOfCards;
 
     // Seçilen kartları tutan liste
     private List<Card> selectedCards = new List<Card>();
+    private List<int> shuffledValues = new List<int>();
 
-    private List<int> shuffledValues = new List<int>(); // Karıştırılmış eşleşme değerleri
+    // UI Panelleri
+    public GameObject levelCompletePanel;
+    public GameObject mainMenuPanel;
+    public GameObject gamePanel; // Oyun alanı paneli
+    public TextMeshProUGUI scoreText;  // Kazanılan puan metni
+    public TextMeshProUGUI highScoreText; // Yüksek skor metni
 
     void Start()
     {
-        // Mevcut seviyeye göre kart sayısını LevelManager'dan alıyoruz
+        // Oyunu ana menüde başlat
+        ShowPanel(mainMenuPanel);
+    }
+
+    public void StartGame()
+    {
+        ShowPanel(gamePanel); // Sadece oyun panelini göster
         numberOfCards = levelManager.GetCardCountForCurrentLevel();
         GenerateCards(numberOfCards);
     }
@@ -41,11 +54,12 @@ public class GameManager : MonoBehaviour
         }
 
         shuffledValues.Clear();
+
         // Kart eşleşme değerlerini oluştur ve karıştır
         for (int i = 0; i < cardCount / 2; i++)
         {
             shuffledValues.Add(i);
-            shuffledValues.Add(i); // Her değerden iki tane ekle (eşleşme için)
+            shuffledValues.Add(i); // Her değerden iki tane ekle
         }
         Shuffle(shuffledValues);
 
@@ -63,7 +77,7 @@ public class GameManager : MonoBehaviour
 
     public void SelectCard(Card card)
     {
-        if (selectedCards.Contains(card)) return; // Eğer kart zaten seçilmişse bir şey yapma
+        if (selectedCards.Contains(card)) return;
 
         selectedCards.Add(card);
 
@@ -81,14 +95,15 @@ public class GameManager : MonoBehaviour
 
         if (card1.cardValue == card2.cardValue)
         {
-            // Puan ekle
+            // Doğru eşleşme: Puan ekle
             scoreManager.AddScore(gameSettings.pointsPerMatch);
             Debug.Log("Match Found! Score Updated.");
         }
         else
         {
-            Debug.Log("No Match.");
-            // Yanlış eşleşme durumunda kartları yeniden çevrilir hale getir
+            // Yanlış eşleşme: Puan düşür
+            scoreManager.SubtractScore(3); // 3 puan düşür
+            Debug.Log("No Match. Points deducted.");
             card1.ResetCard();
             card2.ResetCard();
         }
@@ -96,22 +111,27 @@ public class GameManager : MonoBehaviour
         // Seçilen kartları temizle
         selectedCards.Clear();
 
-        // Eğer eşleşmeler tamamlandıysa yeni seviyeye geç
+        // Eğer eşleşmeler tamamlandıysa seviye tamamlama panelini göster
         if (IsLevelComplete())
         {
             OnLevelComplete();
         }
     }
 
-
     public void OnLevelComplete()
     {
-        // Seviye ilerlet ve yeni kartları oluştur
-        levelManager.NextLevel();
-        numberOfCards = levelManager.GetCardCountForCurrentLevel();
-        GenerateCards(numberOfCards);
+        ShowPanel(levelCompletePanel); // Sadece seviye tamamlama panelini göster
+        if (levelCompletePanel != null)
+        {
+            // Kazanılan puanı ve yüksek skoru göster
+            scoreText.text = $"Score: {scoreManager.currentScore}";
+            highScoreText.text = $"High Score: {scoreManager.highScore}";
+        }
+    }
 
-        Debug.Log($"Level Complete! Proceeding to Level {levelManager.currentLevel}");
+    public void ReturnToMainMenu()
+    {
+        ShowPanel(mainMenuPanel); // Sadece ana menü panelini göster
     }
 
     private bool IsLevelComplete()
@@ -122,13 +142,12 @@ public class GameManager : MonoBehaviour
             Card card = child.GetComponent<Card>();
             if (card != null && !card.IsFlipped())
             {
-                return false; // Bir kart hala kapalıysa seviye tamamlanmamış demektir
+                return false;
             }
         }
         return true;
     }
 
-    // Listeyi karıştırmak için basit bir fonksiyon
     void Shuffle(List<int> list)
     {
         for (int i = list.Count - 1; i > 0; i--)
@@ -138,5 +157,16 @@ public class GameManager : MonoBehaviour
             list[i] = list[randomIndex];
             list[randomIndex] = temp;
         }
+    }
+
+    private void ShowPanel(GameObject activePanel)
+    {
+        // Tüm panelleri gizle
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
+        if (gamePanel != null) gamePanel.SetActive(false);
+        if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
+
+        // Sadece aktif paneli göster
+        if (activePanel != null) activePanel.SetActive(true);
     }
 }
