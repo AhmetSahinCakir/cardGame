@@ -1037,6 +1037,38 @@ MonoBehaviour:
   levelManager: {fileID: 1430001365}
   cardPrefab: {fileID: 2091404765720675232, guid: 1c656c555651251489076994170a871c, type: 3}
   gridPanel: {fileID: 639168450}
+  cardFrontSprites:
+  - {fileID: 21300000, guid: 8dc09a8430099a64784afa118933b212, type: 3}
+  - {fileID: 21300000, guid: 029858493552ba241bf90aafab49b5cd, type: 3}
+  - {fileID: 21300000, guid: 8a6ebf2cee81bbf498674711a5f02c3d, type: 3}
+  - {fileID: 21300000, guid: 17314f03c9dea2d4dbef8f563529aa7a, type: 3}
+  - {fileID: 21300000, guid: 6962be19947794440a26b91fbc913f5f, type: 3}
+  - {fileID: 21300000, guid: 5aba895abeb3a574b80a300727351c4b, type: 3}
+  - {fileID: 21300000, guid: 243b7b8105f25f143bb1ba34cce0bd75, type: 3}
+  - {fileID: 21300000, guid: 523cc9918c1b9b44bac6ed0b9e536706, type: 3}
+  - {fileID: 21300000, guid: 3606810553718944c8006573a47a64a2, type: 3}
+  - {fileID: 21300000, guid: b1c747ffba00a8247a4f6b055d01f957, type: 3}
+  - {fileID: 21300000, guid: 26fc9f176734b0c4996475729d6d4c4f, type: 3}
+  - {fileID: 21300000, guid: ff426e228c0fc1b4495bb7f44a18ae95, type: 3}
+  - {fileID: 21300000, guid: 1631077a0aeb6cd4abd26d0623b01b77, type: 3}
+  - {fileID: 21300000, guid: 71ac11cb2c760894f99ec741feeb3020, type: 3}
+  - {fileID: 21300000, guid: 426157bf957b60c45b398a433feda95d, type: 3}
+  - {fileID: 21300000, guid: e27c739201a1a5644b2b11e4e9e370c5, type: 3}
+  - {fileID: 21300000, guid: e59434d433190a54998384bc160f9811, type: 3}
+  - {fileID: 21300000, guid: 80b19f2ce7a68484b892915378d6d3d4, type: 3}
+  - {fileID: 21300000, guid: 1079165827485174aa02535ad96bae03, type: 3}
+  - {fileID: 21300000, guid: 649535fd95553b740842e15e4ee8e895, type: 3}
+  - {fileID: 21300000, guid: 9952a5ff576903048a1d6a56bc77fe5c, type: 3}
+  - {fileID: 21300000, guid: 07b8a9a47d986aa45b5f60fb744080fe, type: 3}
+  - {fileID: 21300000, guid: d184567fd40812f4cb4234fbbc25afdc, type: 3}
+  - {fileID: 21300000, guid: 273634b1b40c6bb40931d926201684ea, type: 3}
+  - {fileID: 21300000, guid: fd9c62784dd58fe409c36bc2c493d311, type: 3}
+  - {fileID: 21300000, guid: e33e24d064730db4485c5ef4692acb19, type: 3}
+  - {fileID: 21300000, guid: 9503153fe1acddb428e14161599bd99b, type: 3}
+  - {fileID: 21300000, guid: 7b4ffa68fa10dd34a916c3f5e32932ad, type: 3}
+  - {fileID: 21300000, guid: e1535be697ef8f54594534dcad2f3b31, type: 3}
+  - {fileID: 21300000, guid: 58fc59d8e90e24543b433b592beafbc8, type: 3}
+  - {fileID: 21300000, guid: 6dbc78571b6ba9943b687d43de7238a2, type: 3}
 --- !u!4 &1579915049
 Transform:
   m_ObjectHideFlags: 0

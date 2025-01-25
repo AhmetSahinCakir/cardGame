@@ -3,7 +3,12 @@ guid: c932c36b1a4831d40b199370af106ff7
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - gameSettings: {fileID: 11400000, guid: cd37930bdedf6b34b89699d86671870f, type: 2}
+  - scoreManager: {instanceID: 0}
+  - levelManager: {instanceID: 0}
+  - cardPrefab: {fileID: 2091404765720675232, guid: 1c656c555651251489076994170a871c, type: 3}
+  - gridPanel: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
