@@ -32,6 +32,9 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI scoreText;  // Kazanılan puan metni
     public TextMeshProUGUI highScoreText; // Yüksek skor metni
 
+    public TextMeshProUGUI matchesText; // Matches göstergesi
+    public TextMeshProUGUI turnsText;   // Turns göstergesi
+
     void Start()
     {
         // Oyunu ana menüde başlat
@@ -42,6 +45,8 @@ public class GameManager : MonoBehaviour
     {
         ShowPanel(gamePanel); // Sadece oyun panelini göster
         numberOfCards = levelManager.GetCardCountForCurrentLevel();
+        scoreManager.ResetScore();
+        UpdateMatchesAndTurnsUI();
         GenerateCards(numberOfCards);
     }
 
@@ -90,12 +95,16 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator CheckMatch(Card card1, Card card2)
     {
+        // Her deneme için turns'i artırın
+        scoreManager.IncrementTurns();
+
         // İki kart seçildikten sonra 1 saniye bekle
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
 
         if (card1.cardValue == card2.cardValue)
         {
-            // Doğru eşleşme: Puan ekle
+            // Doğru eşleşme: matches'i artırın ve puan ekleyin
+            scoreManager.IncrementMatches();
             scoreManager.AddScore(gameSettings.pointsPerMatch);
             Debug.Log("Match Found! Score Updated.");
         }
@@ -110,6 +119,7 @@ public class GameManager : MonoBehaviour
 
         // Seçilen kartları temizle
         selectedCards.Clear();
+        UpdateMatchesAndTurnsUI();
 
         // Eğer eşleşmeler tamamlandıysa seviye tamamlama panelini göster
         if (IsLevelComplete())
@@ -117,6 +127,7 @@ public class GameManager : MonoBehaviour
             OnLevelComplete();
         }
     }
+
 
     public void OnLevelComplete()
     {
@@ -127,11 +138,30 @@ public class GameManager : MonoBehaviour
             scoreText.text = $"Score: {scoreManager.currentScore}";
             highScoreText.text = $"High Score: {scoreManager.highScore}";
         }
+
+        scoreManager.ResetScore(); // Last Score
     }
 
     public void ReturnToMainMenu()
     {
         ShowPanel(mainMenuPanel); // Sadece ana menü panelini göster
+        MainMenuManager mainMenuManager = mainMenuPanel.GetComponent<MainMenuManager>();
+        if (mainMenuManager != null)
+        {
+            mainMenuManager.UpdateScores();
+        }
+    }
+
+    private void UpdateMainMenuScores()
+    {
+        if (mainMenuPanel != null)
+        {
+            TextMeshProUGUI highScoreTextInMenu = mainMenuPanel.transform.Find("Panel/HighScore").GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI lastScoreTextInMenu = mainMenuPanel.transform.Find("Panel/LastScore").GetComponent<TextMeshProUGUI>();
+
+            if (highScoreTextInMenu != null) highScoreTextInMenu.text = $"High Score: {scoreManager.highScore}";
+            if (lastScoreTextInMenu != null) lastScoreTextInMenu.text = $"Last Score: {scoreManager.lastScore}";
+        }
     }
 
     private bool IsLevelComplete()
@@ -169,4 +199,18 @@ public class GameManager : MonoBehaviour
         // Sadece aktif paneli göster
         if (activePanel != null) activePanel.SetActive(true);
     }
+
+    private void UpdateMatchesAndTurnsUI()
+    {
+        if (matchesText != null)
+        {
+            matchesText.text = $"Matches: {scoreManager.matches}";
+        }
+
+        if (turnsText != null)
+        {
+            turnsText.text = $"Turns: {scoreManager.turns}";
+        }
+    }
+
 }

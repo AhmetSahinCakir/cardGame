@@ -6,6 +6,9 @@ public class ScoreManager : MonoBehaviour
 {
     public int currentScore = 0; // Şu anki skor
     public int highScore = 0; // En yüksek skor
+    public int lastScore = 0; // Son oynanan skor
+    public int matches = 0; // Toplam doğru eşleşme sayısı
+    public int turns = 0;   // Toplam deneme sayısı
 
     public void AddScore(int points)
     {
@@ -32,9 +35,25 @@ public class ScoreManager : MonoBehaviour
         Debug.Log($"Points deducted. Current Score: {currentScore}");
     }
 
+    public void IncrementMatches()
+    {
+        matches++;
+    }
+
+    public void IncrementTurns()
+    {
+        turns++;
+    }
+
     public void ResetScore()
     {
+        // Oyun sonunda Last Score'u güncelle
+        lastScore = currentScore;
+
+        // Mevcut skoru sıfırla
         currentScore = 0;
+        matches = 0;
+        turns = 0;
     }
 }
 

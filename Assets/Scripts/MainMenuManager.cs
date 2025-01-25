@@ -15,11 +15,7 @@ public class MainMenuManager : MonoBehaviour
 
     void Start()
     {
-        // High Score ve Last Score bilgilerini göster
-        highScoreText.text = $"High Score: {PlayerPrefs.GetInt("HighScore", 0)}";
-        lastScoreText.text = $"Last Score: {PlayerPrefs.GetInt("LastScore", 0)}";
-
-        // Varsayılan olarak ilk toggle'ı seçili yap
+        UpdateScores();
         levelToggles[0].isOn = true;
         selectedLevel = 1;
     }
@@ -36,5 +32,11 @@ public class MainMenuManager : MonoBehaviour
         // Seçilen level'i kaydet ve oyun sahnesine geç
         PlayerPrefs.SetInt("SelectedLevel", selectedLevel);
         SceneManager.LoadScene("Game"); // Game sahnesine geç
+    }
+
+    public void UpdateScores()
+    {
+        highScoreText.text = $"High Score: {PlayerPrefs.GetInt("HighScore", 0)}";
+        lastScoreText.text = $"Last Score: {PlayerPrefs.GetInt("LastScore", 0)}";
     }
 }
