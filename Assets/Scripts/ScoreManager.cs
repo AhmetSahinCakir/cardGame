@@ -1,97 +1,108 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using System;
+using UnityEngine;
 
 public class ScoreManager : MonoBehaviour
 {
-    public int currentScore = 0; // Current score
-    public int highScore = 0; // Highest score
-    public int lastScore = 0; // Last played score
-    public int matches = 0; // Total correct matches
-    public int turns = 0; // Total number of attempts
+    public int CurrentScore { get; private set; } = 0;
+    public int HighScore { get; private set; } = 0;
+    public int LastScore { get; private set; } = 0;
+    public int Matches { get; private set; } = 0;
+    public int Turns { get; private set; } = 0;
 
-    // Event to notify UI updates
-    public event Action OnScoreChanged;
+    public event Action OnScoreChanged; // Event for UI updates
 
-    void Start()
+    private void Awake()
     {
-        LoadScores(); // Load scores at start
+        LoadScores(); // Load high score and last session score
     }
 
+    /// Adds score and updates high score if needed
     public void AddScore(int points)
     {
-        currentScore += points;
+        if (points <= 0) return;
 
-        if (currentScore > highScore)
-        {
-            highScore = currentScore; 
-            PlayerPrefs.SetInt("HighScore", highScore);
-        }
+        CurrentScore += points;
+        UpdateHighScore(); // Check if high score needs an update
 
         SaveScores();
-        OnScoreChanged?.Invoke(); // Notify UI
+        OnScoreChanged?.Invoke();
 
-        Debug.Log($"Points Added! Current Score: {currentScore}, High Score: {highScore}");
+        Debug.Log($"Score Updated! Current: {CurrentScore}, High Score: {HighScore}");
     }
 
+    /// Deducts score but ensures it never goes below 0
     public void SubtractScore(int points)
     {
-        currentScore -= points;
+        if (points <= 0) return;
 
-        if (currentScore < 0)
-            currentScore = 0;
-
+        CurrentScore = Mathf.Max(0, CurrentScore - points);
         SaveScores();
-        OnScoreChanged?.Invoke(); // Notify UI
+        OnScoreChanged?.Invoke();
 
-        Debug.Log($"Points Deducted! Current Score: {currentScore}");
+        Debug.Log($"Score Deducted! Current: {CurrentScore}");
     }
 
+    /// Increments match count and updates UI
     public void IncrementMatches()
     {
-        matches++;
-        OnScoreChanged?.Invoke(); // Notify UI
+        Matches++;
+        OnScoreChanged?.Invoke();
     }
 
+    /// Increments turn count and updates UI
     public void IncrementTurns()
     {
-        turns++;
-        OnScoreChanged?.Invoke(); // Notify UI
+        Turns++;
+        OnScoreChanged?.Invoke();
     }
 
+    /// Resets the score and optionally saves progress
     public void ResetScore(bool saveProgress = true)
     {
-        lastScore = currentScore;
-        currentScore = 0;
-        matches = 0;
-        turns = 0;
+        LastScore = CurrentScore;
+        CurrentScore = 0;
+        Matches = 0;
+        Turns = 0;
 
         if (saveProgress)
         {
             SaveScores();
-            Debug.Log($"Scores Reset & Saved! Last Score: {lastScore}, High Score: {highScore}");
+            Debug.Log($"Score Reset & Saved! Last: {LastScore}, High: {HighScore}");
         }
         else
         {
-            Debug.Log("Scores Reset without saving progress.");
+            Debug.Log("Score Reset without saving progress.");
         }
 
-        OnScoreChanged?.Invoke(); // Update UI
+        OnScoreChanged?.Invoke();
     }
 
-
+    /// Loads high score and last session score from `PlayerPrefs`
     private void LoadScores()
     {
-        highScore = PlayerPrefs.GetInt("HighScore", 0);
-        lastScore = PlayerPrefs.GetInt("LastScore", 0);
-        currentScore = PlayerPrefs.GetInt("CurrentScore", 0);
+        HighScore = PlayerPrefs.GetInt("HighScore", 0);
+        LastScore = PlayerPrefs.GetInt("LastScore", 0);
+        CurrentScore = 0; // Always reset at session start
     }
 
+    /// Saves current, last, and high scores to `PlayerPrefs`
     private void SaveScores()
     {
-        PlayerPrefs.SetInt("LastScore", lastScore);
-        PlayerPrefs.SetInt("CurrentScore", currentScore);
+        PlayerPrefs.SetInt("LastScore", LastScore);
+        PlayerPrefs.SetInt("CurrentScore", CurrentScore);
+        PlayerPrefs.SetInt("HighScore", HighScore);
         PlayerPrefs.Save();
+    }
+
+    /// Updates the high score only if needed
+    private void UpdateHighScore()
+    {
+        if (CurrentScore > HighScore)
+        {
+            HighScore = CurrentScore;
+            PlayerPrefs.SetInt("HighScore", HighScore);
+            PlayerPrefs.Save();
+            Debug.Log($"New High Score: {HighScore}");
+        }
     }
 }

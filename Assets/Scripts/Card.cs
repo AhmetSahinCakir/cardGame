@@ -3,47 +3,80 @@ using UnityEngine.UI;
 
 public class Card : MonoBehaviour
 {
-    public int cardValue; // Kartın eşleşme değeri
-    private bool isFlipped = false; // Kartın çevrilip çevrilmediğini kontrol eder
-    public Sprite frontSprite; // Ön yüz görseli
-    public Sprite backSprite; // Arka yüz görseli
-    private Image cardImage; // Kartın görselini göstermek için Image bileşeni
+    [Header("Card Settings")]
+    public int cardValue;
+    private bool isFlipped = false;
 
-    void Awake()
+    [Header("Card Sprites")]
+    private Sprite frontSprite;
+    private Sprite backSprite;
+
+    private Image cardImage;
+    private GameManager gameManager;
+    private Button button;
+
+    /// Initializes the card with its dependencies.
+    public void Initialize(GameManager manager, Sprite frontFace, Sprite backFace)
     {
-        cardImage = GetComponent<Image>();
-        ResetCard(); // Başlangıçta kartı arka yüz olarak ayarla
+        gameManager = manager;
+        frontSprite = frontFace;
+        backSprite = backFace;
+
+        ResetCard(); // Başlangıçta kartı kapalı hale getir
     }
 
+    private void Awake()
+    {
+        cardImage = GetComponent<Image>();
+        button = GetComponent<Button>();
+
+        if (button == null)
+        {
+            Debug.LogError("Card is missing a Button component! Add it in Unity.");
+            return;
+        }
+
+        button.onClick.AddListener(OnCardClicked);
+        ResetCard();
+    }
+
+    /// Assigns the value and front sprite to the card.
     public void SetValue(int value, Sprite frontImage)
     {
         cardValue = value;
-        frontSprite = frontImage; // Ön yüz görselini ata
+        frontSprite = frontImage;
     }
 
+    /// Handles card click event.
     public void OnCardClicked()
     {
-        if (isFlipped) return; // Zaten çevrildiyse bir şey yapma
+        if (isFlipped || gameManager == null) return;
 
         isFlipped = true;
-        cardImage.sprite = frontSprite; // Kartın ön yüzünü göster
+        cardImage.sprite = frontSprite;
 
         Debug.Log($"Card {cardValue} clicked!");
 
-        // GameManager'a bildirerek seçilen kartı gönder
-        GameManager gameManager = FindObjectOfType<GameManager>();
         gameManager.SelectCard(this);
+        button.interactable = false; // Kart açıldıktan sonra tıklanamaz hale getir
     }
 
-    public bool IsFlipped()
-    {
-        return isFlipped;
-    }
+    /// Returns whether the card is flipped.
+    public bool IsFlipped() => isFlipped;
 
+    /// Resets the card to its back face.
     public void ResetCard()
     {
         isFlipped = false;
-        cardImage.sprite = backSprite; // Kartı arka yüze çevir
-        Debug.Log($"Card {cardValue} reset.");
+
+        if (cardImage != null && backSprite != null)
+        {
+            cardImage.sprite = backSprite;
+        }
+
+        if (button != null)
+        {
+            button.interactable = true; // Reset sonrası kart tekrar tıklanabilir hale gelir
+        }
     }
 }
