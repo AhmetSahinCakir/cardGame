@@ -16,3 +16,4 @@ MonoBehaviour:
   cardIncreasePerLevel: 4
   maxCardCount: 36
   pointsPerMatch: 10
+  wrongSelectionPenalty: 3

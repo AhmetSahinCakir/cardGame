@@ -5,100 +5,82 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public GameSettings gameSettings; 
+    public GameSettings gameSettings;
     public ScoreManager scoreManager;
     public LevelManager levelManager;
 
-    // Kart prefab'i
+    // Card prefab
     public GameObject cardPrefab;
 
-    // Kartların yerleşeceği panel
+    // Panel for card placement
     public Transform gridPanel;
 
-    // Kart görselleri
+    // Card images
     public List<Sprite> cardFrontSprites;
 
-    // Kart sayısı
+    // Number of cards in the game
     private int numberOfCards;
 
-    // Seçilen kartları tutan liste
+    // Selected cards
     private List<Card> selectedCards = new List<Card>();
     private List<int> shuffledValues = new List<int>();
 
-    // UI Panelleri
+    // UI Panels
     public GameObject levelCompletePanel;
     public GameObject mainMenuPanel;
-    public GameObject gamePanel; // Oyun alanı paneli
-    public TextMeshProUGUI scoreText;  // Kazanılan puan metni
-    public TextMeshProUGUI highScoreText; // Yüksek skor metni
-
-    public TextMeshProUGUI matchesText; // Matches göstergesi
-    public TextMeshProUGUI turnsText;   // Turns göstergesi
+    public GameObject gamePanel; // Game screen panel
+    public TextMeshProUGUI gameScoreText;  // Score displayed during the game
+    public TextMeshProUGUI finalScoreText; // Score displayed at the end
+    public TextMeshProUGUI highScoreText;
+    
+    public TextMeshProUGUI matchesText;
+    public TextMeshProUGUI turnsText;
 
     void Awake()
     {
         if (gameSettings == null)
         {
-            Debug.LogWarning("⚠️ GameSettings boş, manuel olarak yüklüyoruz...");
+            Debug.LogWarning("GameSettings is missing, loading manually...");
             gameSettings = Resources.Load<GameSettings>("GameSettings");
         }
-        Debug.Log($"🛠️ GameSettings: Başlangıç Kart Sayısı = {gameSettings.startingCardCount}, Max Kart = {gameSettings.maxCardCount}");
+        Debug.Log($"GameSettings Loaded: Initial Card Count = {gameSettings.startingCardCount}, Max Cards = {gameSettings.maxCardCount}");
     }
 
     void Start()
     {
-        // Oyunu ana menüde başlat
-        ShowPanel(mainMenuPanel);
+        scoreManager.OnScoreChanged += UpdateGameUI;
+        ShowPanel(mainMenuPanel); // Start at the main menu
         numberOfCards = levelManager.GetCardCountForCurrentLevel();
-        Debug.Log($"Starting Game withh {numberOfCards} cards");
+        Debug.Log($"Starting Game with {numberOfCards} cards");
         scoreManager.ResetScore();
-        UpdateMatchesAndTurnsUI();
+        UpdateGameUI();
         GenerateCards(numberOfCards);
-        Debug.Log($"Game Started! Level: {levelManager.GetCardCountForCurrentLevel()} Cards: {numberOfCards}");
-
     }
 
     public void StartGame()
     {
         ShowPanel(gamePanel);
 
-        // PlayerPrefs'ten en güncel leveli al
+        // Load selected level from PlayerPrefs
         int selectedLevel = PlayerPrefs.GetInt("SelectedLevel", 1);
-        Debug.Log($"📌 PlayerPrefs'ten Yüklenen Seçili Level: {selectedLevel}");
+        Debug.Log($"Selected Level Loaded: {selectedLevel}");
 
-        // LevelManager'a yeni level bilgisini zorla güncelle
+        // Update LevelManager with selected level
         levelManager.SetCurrentLevel(selectedLevel);
-
-        // Güncellenmiş level bilgisiyle kart sayısını al
+        
+        // Get updated card count based on the level
         numberOfCards = levelManager.GetCardCountForCurrentLevel();
         
         scoreManager.ResetScore();
-        UpdateMatchesAndTurnsUI();
+        UpdateGameUI();
         GenerateCards(numberOfCards);
         
-        Debug.Log($"Oyun Başladı! Güncellenmiş Level: {selectedLevel}, Kart Sayısı: {numberOfCards}");
+        Debug.Log($"Game Started! Level: {selectedLevel}, Card Count: {numberOfCards}");
     }
-
-    public void UpdateLevelAndRestart()
-    {
-        numberOfCards = levelManager.GetCardCountForCurrentLevel();
-        Debug.Log($"Yeni Level Güncellendi: {levelManager.GetCurrentLevel()}, Yeni Kart Sayısı: {numberOfCards}");
-
-        // Mevcut kartları temizle ve yeniden oluştur
-        GenerateCards(numberOfCards);
-    }
-
-    public void SetSelectedLevel(int level)
-    {
-        PlayerPrefs.SetInt("SelectedLevel", level);
-        PlayerPrefs.Save();
-        Debug.Log($"✅ GameManager Seçili Level Güncellendi: {level}");
-    }
-
 
     void GenerateCards(int cardCount)
     {
-        // Önceki kartları temizle
+        // Clear previous cards
         foreach (Transform child in gridPanel)
         {
             Destroy(child.gameObject);
@@ -106,21 +88,20 @@ public class GameManager : MonoBehaviour
 
         shuffledValues.Clear();
 
-        // Kart eşleşme değerlerini oluştur ve karıştır
+        // Generate and shuffle card values
         for (int i = 0; i < cardCount / 2; i++)
         {
             shuffledValues.Add(i);
-            shuffledValues.Add(i); // Her değerden iki tane ekle
+            shuffledValues.Add(i);
         }
         Shuffle(shuffledValues);
 
-        // Yeni kartları oluştur
+        // Instantiate new cards
         for (int i = 0; i < cardCount; i++)
         {
             GameObject newCard = Instantiate(cardPrefab, gridPanel);
             Card card = newCard.GetComponent<Card>();
 
-            // Kart değerini ve ön yüz görselini ata
             int cardValue = shuffledValues[i];
             card.SetValue(cardValue, cardFrontSprites[cardValue]);
         }
@@ -129,68 +110,67 @@ public class GameManager : MonoBehaviour
     public void SelectCard(Card card)
     {
         if (selectedCards.Contains(card)) return;
-
+        
         selectedCards.Add(card);
 
         if (selectedCards.Count == 2)
         {
-            // İki kart seçildiğinde eşleşmeyi kontrol et
             StartCoroutine(CheckMatch(selectedCards[0], selectedCards[1]));
         }
     }
 
     private IEnumerator CheckMatch(Card card1, Card card2)
     {
-        // Her deneme için turns'i artırın
         scoreManager.IncrementTurns();
-
-        // İki kart seçildikten sonra 1 saniye bekle
         yield return new WaitForSeconds(0.5f);
 
         if (card1.cardValue == card2.cardValue)
         {
-            // Doğru eşleşme: matches'i artırın ve puan ekleyin
             scoreManager.IncrementMatches();
             scoreManager.AddScore(gameSettings.pointsPerMatch);
             Debug.Log("Match Found! Score Updated.");
         }
         else
         {
-            // Yanlış eşleşme: Puan düşür
-            scoreManager.SubtractScore(3); // 3 puan düşür
+            scoreManager.SubtractScore(3);
             Debug.Log("No Match. Points deducted.");
             card1.ResetCard();
             card2.ResetCard();
         }
-
-        // Seçilen kartları temizle
+        
         selectedCards.Clear();
-        UpdateMatchesAndTurnsUI();
+        UpdateGameUI();
 
-        // Eğer eşleşmeler tamamlandıysa seviye tamamlama panelini göster
         if (IsLevelComplete())
         {
             OnLevelComplete();
         }
     }
 
-
     public void OnLevelComplete()
     {
-        ShowPanel(levelCompletePanel); // LevelCompletePanel'i göster
+        ShowPanel(levelCompletePanel);
         
-        // Skorları güncelle
-        if (levelCompletePanel != null)
+        if (finalScoreText != null)
         {
-            scoreText.text = $"Score: {scoreManager.currentScore}";
+            finalScoreText.text = $"Final Score: {scoreManager.currentScore}";
+        }
+        if (highScoreText != null)
+        {
             highScoreText.text = $"High Score: {scoreManager.highScore}";
         }
+        
+        PlayerPrefs.SetInt("LastScore", scoreManager.currentScore);
+        if (scoreManager.currentScore > scoreManager.highScore)
+        {
+            PlayerPrefs.SetInt("HighScore", scoreManager.currentScore);
+        }
+        PlayerPrefs.Save();
     }
-
 
     public void ReturnToMainMenu()
     {
-        ShowPanel(mainMenuPanel); // Sadece ana menü panelini göster
+        ShowPanel(mainMenuPanel);
         MainMenuManager mainMenuManager = mainMenuPanel.GetComponent<MainMenuManager>();
         if (mainMenuManager != null)
         {
@@ -198,21 +178,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void UpdateMainMenuScores()
-    {
-        if (mainMenuPanel != null)
-        {
-            TextMeshProUGUI highScoreTextInMenu = mainMenuPanel.transform.Find("Panel/HighScore").GetComponent<TextMeshProUGUI>();
-            TextMeshProUGUI lastScoreTextInMenu = mainMenuPanel.transform.Find("Panel/LastScore").GetComponent<TextMeshProUGUI>();
-
-            if (highScoreTextInMenu != null) highScoreTextInMenu.text = $"High Score: {scoreManager.highScore}";
-            if (lastScoreTextInMenu != null) lastScoreTextInMenu.text = $"Last Score: {scoreManager.lastScore}";
-        }
-    }
-
     private bool IsLevelComplete()
     {
-        // GridPanel'deki tüm kartların açık olup olmadığını kontrol et
         foreach (Transform child in gridPanel)
         {
             Card card = child.GetComponent<Card>();
@@ -237,16 +204,14 @@ public class GameManager : MonoBehaviour
 
     private void ShowPanel(GameObject activePanel)
     {
-        // Tüm panelleri gizle
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (gamePanel != null) gamePanel.SetActive(false);
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
 
-        // Sadece aktif paneli göster
         if (activePanel != null) activePanel.SetActive(true);
     }
 
-    private void UpdateMatchesAndTurnsUI()
+    private void UpdateGameUI()
     {
         if (matchesText != null)
         {
@@ -257,6 +222,40 @@ public class GameManager : MonoBehaviour
         {
             turnsText.text = $"Turns: {scoreManager.turns}";
         }
+        
+        if (gameScoreText != null)
+        {
+            gameScoreText.text = $"Score: {scoreManager.currentScore}";
+        }
     }
+
+    public void ExitToMainMenu()
+    {
+        Debug.Log("Returning to Main Menu without saving progress...");
+
+        // Reset the game state WITHOUT saving progress
+        scoreManager.ResetScore(false); // Prevents saving the current score
+
+        // Clear the game board to remove any active cards
+        ClearGameBoard();
+
+        // Ensure the UI updates properly
+        UpdateGameUI();
+
+        // Show the Main Menu panel
+        ShowPanel(mainMenuPanel);
+    }
+
+    private void ClearGameBoard()
+    {
+        foreach (Transform child in gridPanel)
+        {
+            Destroy(child.gameObject); // Clears all cards from the board
+        }
+        selectedCards.Clear(); // Ensure selected cards list is emptied
+        shuffledValues.Clear(); // Clear the shuffled values list
+    }
+
+
 
 }

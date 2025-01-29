@@ -1,14 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class ScoreManager : MonoBehaviour
 {
-    public int currentScore = 0; // Şu anki skor
-    public int highScore = 0; // En yüksek skor
-    public int lastScore = 0; // Son oynanan skor
-    public int matches = 0; // Toplam doğru eşleşme sayısı
-    public int turns = 0;   // Toplam deneme sayısı
+    public int currentScore = 0; // Current score
+    public int highScore = 0; // Highest score
+    public int lastScore = 0; // Last played score
+    public int matches = 0; // Total correct matches
+    public int turns = 0; // Total number of attempts
+
+    // Event to notify UI updates
+    public event Action OnScoreChanged;
+
+    void Start()
+    {
+        LoadScores(); // Load scores at start
+    }
 
     public void AddScore(int points)
     {
@@ -16,44 +25,73 @@ public class ScoreManager : MonoBehaviour
 
         if (currentScore > highScore)
         {
-            highScore = currentScore; // Eğer yeni puan, yüksek skordan büyükse highScore güncellenir
+            highScore = currentScore; 
+            PlayerPrefs.SetInt("HighScore", highScore);
         }
 
-        Debug.Log($"Current Score: {currentScore}, High Score: {highScore}");
+        SaveScores();
+        OnScoreChanged?.Invoke(); // Notify UI
+
+        Debug.Log($"Points Added! Current Score: {currentScore}, High Score: {highScore}");
     }
 
     public void SubtractScore(int points)
     {
         currentScore -= points;
 
-        // Puan 0'ın altına düşemez
         if (currentScore < 0)
-        {
             currentScore = 0;
-        }
 
-        Debug.Log($"Points deducted. Current Score: {currentScore}");
+        SaveScores();
+        OnScoreChanged?.Invoke(); // Notify UI
+
+        Debug.Log($"Points Deducted! Current Score: {currentScore}");
     }
 
     public void IncrementMatches()
     {
         matches++;
+        OnScoreChanged?.Invoke(); // Notify UI
     }
 
     public void IncrementTurns()
     {
         turns++;
+        OnScoreChanged?.Invoke(); // Notify UI
     }
 
-    public void ResetScore()
+    public void ResetScore(bool saveProgress = true)
     {
-        // Oyun sonunda Last Score'u güncelle
         lastScore = currentScore;
-
-        // Mevcut skoru sıfırla
         currentScore = 0;
         matches = 0;
         turns = 0;
+
+        if (saveProgress)
+        {
+            SaveScores();
+            Debug.Log($"Scores Reset & Saved! Last Score: {lastScore}, High Score: {highScore}");
+        }
+        else
+        {
+            Debug.Log("Scores Reset without saving progress.");
+        }
+
+        OnScoreChanged?.Invoke(); // Update UI
+    }
+
+
+    private void LoadScores()
+    {
+        highScore = PlayerPrefs.GetInt("HighScore", 0);
+        lastScore = PlayerPrefs.GetInt("LastScore", 0);
+        currentScore = PlayerPrefs.GetInt("CurrentScore", 0);
+    }
+
+    private void SaveScores()
+    {
+        PlayerPrefs.SetInt("LastScore", lastScore);
+        PlayerPrefs.SetInt("CurrentScore", currentScore);
+        PlayerPrefs.Save();
     }
 }
-

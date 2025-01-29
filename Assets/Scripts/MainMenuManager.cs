@@ -5,7 +5,7 @@ using TMPro;
 
 public class MainMenuManager : MonoBehaviour
 {
-    public Toggle[] levelToggles; // 6 adet toggle için
+    public Toggle[] levelToggles; // 6 adet toggle
     public TextMeshProUGUI highScoreText;
     public TextMeshProUGUI lastScoreText;
 
@@ -20,20 +20,15 @@ public class MainMenuManager : MonoBehaviour
 
     private void InitializeLevelSelection()
     {
-        // Toggle array kontrolü
         if (levelToggles == null || levelToggles.Length != TOTAL_LEVELS)
         {
             Debug.LogError($"Level toggles array must contain exactly {TOTAL_LEVELS} toggles!");
             return;
         }
 
-        // Önceki seçili leveli yükle (varsayılan: 1)
         selectedLevel = PlayerPrefs.GetInt("SelectedLevel", 1);
-        
-        // Seçili levelin geçerli aralıkta olduğundan emin ol
         selectedLevel = Mathf.Clamp(selectedLevel, 1, TOTAL_LEVELS);
 
-        // Tüm toggle'ları kapat
         foreach (Toggle toggle in levelToggles)
         {
             if (toggle != null)
@@ -42,10 +37,8 @@ public class MainMenuManager : MonoBehaviour
             }
         }
 
-        // Sadece seçili levelin toggle'ını aç
         levelToggles[selectedLevel - 1].isOn = true;
 
-        // Toggle group'un sadece bir seçime izin verdiğinden emin ol
         ToggleGroup toggleGroup = levelToggles[0].group;
         if (toggleGroup != null)
         {
@@ -55,7 +48,6 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnLevelToggleChanged(int levelIndex)
     {
-        // Toggle'ın açık olduğundan emin ol
         if (!levelToggles[levelIndex].isOn)
             return;
 
@@ -64,41 +56,39 @@ public class MainMenuManager : MonoBehaviour
 
         PlayerPrefs.SetInt("SelectedLevel", selectedLevel);
         PlayerPrefs.Save();
-        Debug.Log($"Saved Selected Level: {selectedLevel}");
-
     }
 
     public void StartGame()
     {
         PlayerPrefs.SetInt("SelectedLevel", selectedLevel);
         PlayerPrefs.Save();
-        
-        Debug.Log($"📌 Seçili Level Kaydedildi: {selectedLevel}");
 
-        // GameManager'a yeni level bilgisini zorla güncelle
+        Debug.Log($"Selected Level Saved: {selectedLevel}");
+
         GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null)
         {
             gameManager.StartGame();
         }
 
-        // Oyun sahnesini yükle
         SceneManager.LoadScene("Game");
     }
 
-
-
-
     public void UpdateScores()
     {
+        int highScore = PlayerPrefs.GetInt("HighScore", 0);
+        int lastScore = PlayerPrefs.GetInt("LastScore", 0);
+
         if (highScoreText != null)
         {
-            highScoreText.text = $"High Score: {PlayerPrefs.GetInt("HighScore", 0)}";
+            highScoreText.text = $"High Score: {highScore}";
         }
-        
+
         if (lastScoreText != null)
         {
-            lastScoreText.text = $"Last Score: {PlayerPrefs.GetInt("LastScore", 0)}";
+            lastScoreText.text = $"Last Score: {lastScore}";
         }
+
+        Debug.Log($"MainMenu: Scores Loaded - Last Score: {lastScore}, High Score: {highScore}");
     }
 }
