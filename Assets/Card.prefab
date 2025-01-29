@@ -91,8 +91,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardValue: 16
-  frontSprite: {fileID: 0}
-  backSprite: {fileID: 21300000, guid: 066d207ae32df1e47930f5ae19b09642, type: 3}
 --- !u!114 &2971614428449086529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -112,7 +110,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
