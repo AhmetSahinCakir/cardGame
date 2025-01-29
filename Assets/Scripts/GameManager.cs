@@ -40,6 +40,13 @@ public class GameManager : MonoBehaviour
     {
         scoreManager.OnScoreChanged += UpdateGameUI;
         ShowPanel(mainMenuPanel);
+        numberOfCards = levelManager.GetCardCountForCurrentLevel();
+        Debug.Log($"Starting Game with {numberOfCards} cards");
+        scoreManager.ResetScore();
+        UpdateMatchesAndTurnsUI();
+        GenerateCards(numberOfCards);
+        Debug.Log($"Game Started! Level: {levelManager.GetCardCountForCurrentLevel()} Cards: {numberOfCards}");
+
     }
 
     public void StartGame()
