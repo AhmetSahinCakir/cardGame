@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -9,30 +10,20 @@ public class GameManager : MonoBehaviour
     public ScoreManager scoreManager;
     public LevelManager levelManager;
 
-    // Card prefab
     public GameObject cardPrefab;
-
-    // Panel for card placement
     public Transform gridPanel;
-
-    // Card images
     public List<Sprite> cardFrontSprites;
 
-    // Number of cards in the game
     private int numberOfCards;
-
-    // Selected cards
     private List<Card> selectedCards = new List<Card>();
     private List<int> shuffledValues = new List<int>();
 
-    // UI Panels
     public GameObject levelCompletePanel;
     public GameObject mainMenuPanel;
-    public GameObject gamePanel; // Game screen panel
-    public TextMeshProUGUI gameScoreText;  // Score displayed during the game
-    public TextMeshProUGUI finalScoreText; // Score displayed at the end
+    public GameObject gamePanel;
+    public TextMeshProUGUI gameScoreText;
+    public TextMeshProUGUI finalScoreText;
     public TextMeshProUGUI highScoreText;
-    
     public TextMeshProUGUI matchesText;
     public TextMeshProUGUI turnsText;
 
@@ -43,52 +34,45 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("GameSettings is missing, loading manually...");
             gameSettings = Resources.Load<GameSettings>("GameSettings");
         }
-        Debug.Log($"GameSettings Loaded: Initial Card Count = {gameSettings.startingCardCount}, Max Cards = {gameSettings.maxCardCount}");
     }
 
     void Start()
     {
         scoreManager.OnScoreChanged += UpdateGameUI;
-        ShowPanel(mainMenuPanel); // Start at the main menu
-        numberOfCards = levelManager.GetCardCountForCurrentLevel();
-        Debug.Log($"Starting Game with {numberOfCards} cards");
-        scoreManager.ResetScore();
-        UpdateGameUI();
-        GenerateCards(numberOfCards);
+        ShowPanel(mainMenuPanel);
     }
 
     public void StartGame()
     {
         ShowPanel(gamePanel);
 
-        // Load selected level from PlayerPrefs
         int selectedLevel = PlayerPrefs.GetInt("SelectedLevel", 1);
-        Debug.Log($"Selected Level Loaded: {selectedLevel}");
-
-        // Update LevelManager with selected level
         levelManager.SetCurrentLevel(selectedLevel);
-        
-        // Get updated card count based on the level
         numberOfCards = levelManager.GetCardCountForCurrentLevel();
-        
+
         scoreManager.ResetScore();
         UpdateGameUI();
-        GenerateCards(numberOfCards);
-        
+
+        StartCoroutine(DelayedGenerateCards());
+
         Debug.Log($"Game Started! Level: {selectedLevel}, Card Count: {numberOfCards}");
+    }
+
+    private IEnumerator DelayedGenerateCards()
+    {
+        yield return null;
+        yield return new WaitForEndOfFrame();
+        GenerateCards(numberOfCards);
     }
 
     void GenerateCards(int cardCount)
     {
-        // Clear previous cards
         foreach (Transform child in gridPanel)
         {
             Destroy(child.gameObject);
         }
 
         shuffledValues.Clear();
-
-        // Generate and shuffle card values
         for (int i = 0; i < cardCount / 2; i++)
         {
             shuffledValues.Add(i);
@@ -96,7 +80,34 @@ public class GameManager : MonoBehaviour
         }
         Shuffle(shuffledValues);
 
-        // Instantiate new cards
+        RectTransform gridRect = gridPanel.GetComponent<RectTransform>();
+        float panelWidth = gridRect.rect.width;
+        float panelHeight = gridRect.rect.height;
+
+        int columns = Mathf.CeilToInt(Mathf.Sqrt(cardCount));
+        int rows = Mathf.CeilToInt((float)cardCount / columns);
+
+        GridLayoutGroup gridLayout = gridPanel.GetComponent<GridLayoutGroup>();
+        if (gridLayout == null)
+        {
+            Debug.LogError("GridLayoutGroup component is missing on GridPanel!");
+            return;
+        }
+
+        // Kenar Boşlukları
+        float paddingX = 40f; // Sol ve sağ toplam boşluk
+        float paddingY = 40f; // Üst ve alt toplam boşluk
+
+        float availableWidth = panelWidth - paddingX;
+        float availableHeight = panelHeight - paddingY;
+
+        float cardWidth = (availableWidth - ((columns - 1) * gridLayout.spacing.x)) / columns;
+        float cardHeight = (availableHeight - ((rows - 1) * gridLayout.spacing.y)) / rows;
+
+        gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        gridLayout.constraintCount = columns;
+        gridLayout.cellSize = new Vector2(cardWidth, cardHeight);
+
         for (int i = 0; i < cardCount; i++)
         {
             GameObject newCard = Instantiate(cardPrefab, gridPanel);
@@ -105,6 +116,8 @@ public class GameManager : MonoBehaviour
             int cardValue = shuffledValues[i];
             card.SetValue(cardValue, cardFrontSprites[cardValue]);
         }
+
+        Debug.Log($"Cards Generated: {cardCount}, Grid Size: {columns}x{rows}, Card Size: ({cardWidth:F2}, {cardHeight:F2})");
     }
 
     public void SelectCard(Card card)
@@ -128,12 +141,10 @@ public class GameManager : MonoBehaviour
         {
             scoreManager.IncrementMatches();
             scoreManager.AddScore(gameSettings.pointsPerMatch);
-            Debug.Log("Match Found! Score Updated.");
         }
         else
         {
             scoreManager.SubtractScore(3);
-            Debug.Log("No Match. Points deducted.");
             card1.ResetCard();
             card2.ResetCard();
         }
@@ -228,34 +239,4 @@ public class GameManager : MonoBehaviour
             gameScoreText.text = $"Score: {scoreManager.currentScore}";
         }
     }
-
-    public void ExitToMainMenu()
-    {
-        Debug.Log("Returning to Main Menu without saving progress...");
-
-        // Reset the game state WITHOUT saving progress
-        scoreManager.ResetScore(false); // Prevents saving the current score
-
-        // Clear the game board to remove any active cards
-        ClearGameBoard();
-
-        // Ensure the UI updates properly
-        UpdateGameUI();
-
-        // Show the Main Menu panel
-        ShowPanel(mainMenuPanel);
-    }
-
-    private void ClearGameBoard()
-    {
-        foreach (Transform child in gridPanel)
-        {
-            Destroy(child.gameObject); // Clears all cards from the board
-        }
-        selectedCards.Clear(); // Ensure selected cards list is emptied
-        shuffledValues.Clear(); // Clear the shuffled values list
-    }
-
-
-
 }
