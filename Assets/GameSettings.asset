@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf52196e1f5c464784b755458721e6c, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: 
-  startingCardCount: 4
-  cardIncreasePerLevel: 2
-  maxCardCount: 20
+  startingCardCount: 16
+  cardIncreasePerLevel: 4
+  maxCardCount: 36
   pointsPerMatch: 10

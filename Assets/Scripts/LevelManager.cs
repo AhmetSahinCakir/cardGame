@@ -4,21 +4,34 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
-    public GameSettings gameSettings; // Oyunun ayarları
-    public int currentLevel = 1; // Mevcut seviye
+    public GameSettings gameSettings; 
+    private int currentLevel; // Private olarak kalmalı
+
+    void Start()
+    {
+        // Seçilen leveli PlayerPrefs’ten al
+        currentLevel = PlayerPrefs.GetInt("SelectedLevel", 1);
+        Debug.Log($"LevelManager Yüklendi, Seçili Level: {currentLevel}");
+    }
+
+    // GETTER METODU EKLEYELİM!
+    public int GetCurrentLevel()
+    {
+        return currentLevel;
+    }
+
+    public void SetCurrentLevel(int level)
+    {
+        currentLevel = level;
+        Debug.Log($"LevelManager'da Güncellenmiş Level: {currentLevel}");
+    }
+
 
     public int GetCardCountForCurrentLevel()
     {
-        int cardCount = gameSettings.startingCardCount +
-                        (currentLevel - 1) * gameSettings.cardIncreasePerLevel;
-
-        return Mathf.Min(cardCount, gameSettings.maxCardCount);
-    }
-
-    public void NextLevel()
-    {
-        currentLevel++;
-        Debug.Log($"Level: {currentLevel}");
+        int cardCount = gameSettings.GetCardCountForLevel(currentLevel);
+        Debug.Log($"🃏 Seçilen Level {currentLevel}, Kart Sayısı: {cardCount}");
+        return cardCount;
     }
 }
 

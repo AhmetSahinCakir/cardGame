@@ -35,20 +35,66 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI matchesText; // Matches göstergesi
     public TextMeshProUGUI turnsText;   // Turns göstergesi
 
+    void Awake()
+    {
+        if (gameSettings == null)
+        {
+            Debug.LogWarning("⚠️ GameSettings boş, manuel olarak yüklüyoruz...");
+            gameSettings = Resources.Load<GameSettings>("GameSettings");
+        }
+        Debug.Log($"🛠️ GameSettings: Başlangıç Kart Sayısı = {gameSettings.startingCardCount}, Max Kart = {gameSettings.maxCardCount}");
+    }
+
     void Start()
     {
         // Oyunu ana menüde başlat
         ShowPanel(mainMenuPanel);
+        numberOfCards = levelManager.GetCardCountForCurrentLevel();
+        Debug.Log($"Starting Game withh {numberOfCards} cards");
+        scoreManager.ResetScore();
+        UpdateMatchesAndTurnsUI();
+        GenerateCards(numberOfCards);
+        Debug.Log($"Game Started! Level: {levelManager.GetCardCountForCurrentLevel()} Cards: {numberOfCards}");
+
     }
 
     public void StartGame()
     {
-        ShowPanel(gamePanel); // Sadece oyun panelini göster
+        ShowPanel(gamePanel);
+
+        // PlayerPrefs'ten en güncel leveli al
+        int selectedLevel = PlayerPrefs.GetInt("SelectedLevel", 1);
+        Debug.Log($"📌 PlayerPrefs'ten Yüklenen Seçili Level: {selectedLevel}");
+
+        // LevelManager'a yeni level bilgisini zorla güncelle
+        levelManager.SetCurrentLevel(selectedLevel);
+
+        // Güncellenmiş level bilgisiyle kart sayısını al
         numberOfCards = levelManager.GetCardCountForCurrentLevel();
+        
         scoreManager.ResetScore();
         UpdateMatchesAndTurnsUI();
         GenerateCards(numberOfCards);
+        
+        Debug.Log($"Oyun Başladı! Güncellenmiş Level: {selectedLevel}, Kart Sayısı: {numberOfCards}");
     }
+
+    public void UpdateLevelAndRestart()
+    {
+        numberOfCards = levelManager.GetCardCountForCurrentLevel();
+        Debug.Log($"Yeni Level Güncellendi: {levelManager.GetCurrentLevel()}, Yeni Kart Sayısı: {numberOfCards}");
+
+        // Mevcut kartları temizle ve yeniden oluştur
+        GenerateCards(numberOfCards);
+    }
+
+    public void SetSelectedLevel(int level)
+    {
+        PlayerPrefs.SetInt("SelectedLevel", level);
+        PlayerPrefs.Save();
+        Debug.Log($"✅ GameManager Seçili Level Güncellendi: {level}");
+    }
+
 
     void GenerateCards(int cardCount)
     {
@@ -131,16 +177,16 @@ public class GameManager : MonoBehaviour
 
     public void OnLevelComplete()
     {
-        ShowPanel(levelCompletePanel); // Sadece seviye tamamlama panelini göster
+        ShowPanel(levelCompletePanel); // LevelCompletePanel'i göster
+        
+        // Skorları güncelle
         if (levelCompletePanel != null)
         {
-            // Kazanılan puanı ve yüksek skoru göster
             scoreText.text = $"Score: {scoreManager.currentScore}";
             highScoreText.text = $"High Score: {scoreManager.highScore}";
         }
-
-        scoreManager.ResetScore(); // Last Score
     }
+
 
     public void ReturnToMainMenu()
     {
