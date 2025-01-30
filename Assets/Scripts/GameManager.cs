@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject cardPrefab;
     [SerializeField] private Transform gridPanel;
     [SerializeField] private List<Sprite> cardFrontSprites;
-    [SerializeField] private Sprite cardBackSprite; // ✅ Arka yüz sprite'ı eklendi
+    [SerializeField] private Sprite cardBackSprite;
 
     [Header("UI Panels")]
     [SerializeField] private GameObject levelCompletePanel;
@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviour
     private int numberOfCards;
     private List<Card> selectedCards = new List<Card>();
     private List<int> shuffledValues = new List<int>();
+    private Coroutine autoResetCoroutine; // 3. karta basılmazsa resetleme için
 
     private void Awake()
     {
@@ -186,16 +187,49 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
     public void SelectCard(Card card)
     {
         if (selectedCards.Contains(card)) return;
 
-        selectedCards.Add(card);
         if (selectedCards.Count == 2)
         {
-            StartCoroutine(CheckMatch(selectedCards[0], selectedCards[1]));
+            // Eğer 3. karta tıklanırsa, ilk iki kartı hemen kapat
+            ResetSelectedCards();
         }
+
+        selectedCards.Add(card);
+
+        if (selectedCards.Count == 2)
+        {
+            // Eşleşme kontrolü başlat
+            StartCoroutine(CheckMatch(selectedCards[0], selectedCards[1]));
+
+            // Eğer 3. kart tıklanmazsa, belirli bir süre sonra kapanmaları için coroutine başlat
+            if (autoResetCoroutine != null)
+            {
+                StopCoroutine(autoResetCoroutine); // Önceki bekleme sürecini iptal et
+            }
+            autoResetCoroutine = StartCoroutine(AutoResetCards());
+        }
+    }
+
+    private IEnumerator AutoResetCards()
+    {
+        yield return new WaitForSeconds(1.5f); // 1.5 saniye bekle
+
+        if (selectedCards.Count == 2)
+        {
+            ResetSelectedCards();
+        }
+    }
+
+    private void ResetSelectedCards()
+    {
+        foreach (var card in selectedCards)
+        {
+            card.ResetCard(); // Kartları geri çevir
+        }
+        selectedCards.Clear();
     }
 
     private IEnumerator CheckMatch(Card card1, Card card2)
@@ -205,17 +239,18 @@ public class GameManager : MonoBehaviour
 
         if (card1.cardValue == card2.cardValue)
         {
+            // Kartlar eşleşti, açık bırak
             scoreManager.IncrementMatches();
             scoreManager.AddScore(gameSettings.PointsPerMatch);
+            selectedCards.Clear(); // Kartları listeye almadan bırak
         }
         else
         {
+            // Kartlar eşleşmedi, geri çevir
             scoreManager.SubtractScore(3);
-            card1.ResetCard();
-            card2.ResetCard();
+            ResetSelectedCards();
         }
 
-        selectedCards.Clear();
         UpdateGameUI();
 
         if (IsLevelComplete())

@@ -53,13 +53,19 @@ public class Card : MonoBehaviour
         if (isFlipped || gameManager == null) return;
 
         isFlipped = true;
-        cardImage.sprite = frontSprite;
+        button.interactable = false; // Kart açıldıktan sonra tıklanamaz hale getir
+
+        // LeanTween ile döndürme animasyonu
+        LeanTween.rotateY(gameObject, 90f, 0.15f).setOnComplete(() =>
+        {
+            cardImage.sprite = frontSprite; // Kartın ön yüzünü göster
+            LeanTween.rotateY(gameObject, 0f, 0.15f); // Eski pozisyonuna geri döndür
+        });
 
         Debug.Log($"Card {cardValue} clicked!");
-
         gameManager.SelectCard(this);
-        button.interactable = false; // Kart açıldıktan sonra tıklanamaz hale getir
     }
+
 
     /// Returns whether the card is flipped.
     public bool IsFlipped() => isFlipped;
@@ -68,15 +74,14 @@ public class Card : MonoBehaviour
     public void ResetCard()
     {
         isFlipped = false;
+        button.interactable = true;
 
-        if (cardImage != null && backSprite != null)
+        // LeanTween ile kapanma animasyonu
+        LeanTween.rotateY(gameObject, 90f, 0.15f).setOnComplete(() =>
         {
-            cardImage.sprite = backSprite;
-        }
-
-        if (button != null)
-        {
-            button.interactable = true; // Reset sonrası kart tekrar tıklanabilir hale gelir
-        }
+            cardImage.sprite = backSprite; // Kartın arka yüzünü göster
+            LeanTween.rotateY(gameObject, 0f, 0.15f); // Kartı geri döndür
+        });
     }
+
 }
