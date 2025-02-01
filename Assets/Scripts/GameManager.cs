@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+
 public class GameManager : MonoBehaviour
 {
     [Header("Dependencies")]
@@ -32,6 +33,8 @@ public class GameManager : MonoBehaviour
     private List<Card> selectedCards = new List<Card>();
     private List<int> shuffledValues = new List<int>();
     private Coroutine autoResetCoroutine; // 3. karta basılmazsa resetleme için
+    private AudioManager audioManager;
+
 
     private void Awake()
     {
@@ -43,6 +46,13 @@ public class GameManager : MonoBehaviour
 
         if (levelManager == null)
             levelManager = FindObjectOfType<LevelManager>();
+        
+        audioManager = FindObjectOfType<AudioManager>();
+
+        if (audioManager == null)
+        {
+            Debug.LogError("AudioManager is missing in the scene!");
+        }
 
         if (gameSettings == null || scoreManager == null || levelManager == null || cardBackSprite == null)
         {
@@ -65,6 +75,11 @@ public class GameManager : MonoBehaviour
 
         scoreManager.ResetScore();
         UpdateGameUI();
+
+        if (audioManager != null)
+        {
+            audioManager.PlayShuffleSound();
+        }
 
         StartCoroutine(DelayedGenerateCards());
     }
@@ -199,6 +214,11 @@ public class GameManager : MonoBehaviour
 
         selectedCards.Add(card);
 
+        if (audioManager != null)
+        {
+            audioManager.PlayFlipCardSound();
+        }
+
         if (selectedCards.Count == 2)
         {
             // Eşleşme kontrolü başlat
@@ -243,12 +263,22 @@ public class GameManager : MonoBehaviour
             scoreManager.IncrementMatches();
             scoreManager.AddScore(gameSettings.PointsPerMatch);
             selectedCards.Clear(); // Kartları listeye almadan bırak
+
+            if (audioManager != null)
+            {
+                audioManager.PlayMatchSound();
+            }
         }
         else
         {
             // Kartlar eşleşmedi, geri çevir
             scoreManager.SubtractScore(3);
             ResetSelectedCards();
+
+            if (audioManager != null)
+            {
+                audioManager.PlayMismatchSound();
+            }
         }
 
         UpdateGameUI();

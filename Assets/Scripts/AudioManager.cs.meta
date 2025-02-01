@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 75b8fdc1e84638a4797ed33734e012d6
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - backgroundMusic: {fileID: 8300000, guid: 91031ad78028f63489797b0d290d678e, type: 3}
+  - flipCardSound: {fileID: 8300000, guid: 976d37726c9c9304497853334207eea2, type: 3}
+  - matchSound: {fileID: 8300000, guid: 8688de117ab5e2342a47cc3ea98aea77, type: 3}
+  - mismatchSound: {fileID: 8300000, guid: 5d3a52939bd6b1b4189c16e9d0595560, type: 3}
+  - shuffleSound: {fileID: 8300000, guid: 5b8d499fd8a51da44a2fea7f28901003, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
